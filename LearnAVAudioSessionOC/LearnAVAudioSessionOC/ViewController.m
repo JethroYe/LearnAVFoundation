@@ -14,13 +14,18 @@
 @property (strong , nonatomic) AVCaptureSession *session;
 
 @property (strong , nonatomic) AVCaptureDeviceInput *videoInput;
+@property (strong , nonatomic) AVCaptureDeviceInput *audioInput;
+@property (strong , nonatomic) AVCaptureMovieFileOutput *movieFileOutPut;
 
+
+@property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewlayer; //预览layer
 
 @end
 
 @implementation ViewController
 
 - (void)viewDidLoad {
+    
     [super viewDidLoad];
     
     //设置一手分辨率
@@ -32,7 +37,14 @@
     [self setUpVideo];
     
     //2.设置音频输入
+    [self setUpAudio];
+
+    //3.文件输出
+    [self setUpFileOut];
     
+    //4.设置预览layer
+    [self setUpPreviewLayer];
+
 }
 
 - (void)setUpVideo {
@@ -49,9 +61,48 @@
     }
 }
 
-- (void)setUpAudio{
+- (void)setUpAudio {
+    
+    AVCaptureDevice *audioCaptureDevice = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio] firstObject];
+    
+    NSError *error = nil;
+    self.audioInput = [[AVCaptureDeviceInput alloc] initWithDevice:audioCaptureDevice error:&error];
+    
+    //放入session
+    if ([self.session canAddInput:self.audioInput]) {
+        [self.session addInput:self.audioInput];
+    }
+}
+
+- (void)setUpFileOut {
+    
+    //1. 初始化设备输出对象
+    self.movieFileOutPut = [[AVCaptureMovieFileOutput alloc] init];
+    
+    //2. 设置输出对象的属性
+    AVCaptureConnection *captureConnection = [self.movieFileOutPut connectionWithMediaType:AVMediaTypeVideo];
+    
+    //3. 视频防抖
+    if([captureConnection isVideoStabilizationSupported]){
+        captureConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
+    }
+    
+    //4. 预览图层和视频方向保持一致
+    captureConnection.videoOrientation = [self.previewlayer connection].videoOrientation;
+    
+    //5. 输出设备添加到会话中
+    if ([self.session canAddOutput:self.movieFileOutPut]) {
+        [self.session addOutput:self.movieFileOutPut];
+    }
     
 }
+
+- (void)setUpPreviewLayer {
+    
+    self.previewlayer.frame = [UIScreen mainScreen].bounds;
+    [self.view.layer insertSublayer:self.previewlayer above:0];
+}
+
 
 //MARK: - 获取录像设备
 - (AVCaptureDevice *)getCameraDeviceWithPosition:(AVCaptureDevicePosition)position {
@@ -65,6 +116,16 @@
 }
 
 //MARK: - lazy
+
+- (AVCaptureVideoPreviewLayer *)previewLayer
+{
+    if (!_previewlayer) {
+        _previewlayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
+        _previewlayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+    }
+    
+    return _previewlayer;
+}
 
 - (AVCaptureSession *)session
 {

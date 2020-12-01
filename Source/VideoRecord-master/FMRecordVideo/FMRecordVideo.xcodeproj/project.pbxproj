@@ -204,7 +204,7 @@
 				TargetAttributes = {
 					1DB91FDE1E63C85D00DF1264 = {
 						CreatedOnToolsVersion = 8.2.1;
-						DevelopmentTeam = VN226642G5;
+						DevelopmentTeam = A9MA89F6VU;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -214,6 +214,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -377,12 +378,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = VN226642G5;
+				DEVELOPMENT_TEAM = A9MA89F6VU;
 				GCC_PREFIX_HEADER = FMRecordVideo/VideoHeader.pch;
 				INFOPLIST_FILE = FMRecordVideo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.suifeng.FMRecordVideo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.suifeng.FMRecordVideo3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -391,12 +392,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = VN226642G5;
+				DEVELOPMENT_TEAM = A9MA89F6VU;
 				GCC_PREFIX_HEADER = FMRecordVideo/VideoHeader.pch;
 				INFOPLIST_FILE = FMRecordVideo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.suifeng.FMRecordVideo;
+				PRODUCT_BUNDLE_IDENTIFIER = com.suifeng.FMRecordVideo3;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

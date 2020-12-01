@@ -35,6 +35,7 @@
     
     FMFileVideoController *fileVC = [[FMFileVideoController alloc] init];
     UINavigationController *NAV = [[UINavigationController alloc] initWithRootViewController:fileVC];
+    NAV.modalPresentationStyle = UIModalPresentationFullScreen;
     [self presentViewController:NAV animated:YES completion:nil];
     
     
