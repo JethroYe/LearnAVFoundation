@@ -11,128 +11,146 @@
 
 @interface ViewController ()
 
-@property (strong , nonatomic) AVCaptureSession *session;
 
-@property (strong , nonatomic) AVCaptureDeviceInput *videoInput;
-@property (strong , nonatomic) AVCaptureDeviceInput *audioInput;
-@property (strong , nonatomic) AVCaptureMovieFileOutput *movieFileOutPut;
+//MARK: View
+//@property (strong , nonatomic) UIView *previewView;
+//@property (strong , nonatomic) UIView *overLayView;
+@property (strong , nonatomic) UIButton *captureBtn;
 
-
+//MARK: AVFoundation
+@property (strong , nonatomic) AVCaptureSession *captureSession;
+@property (strong , nonatomic) AVCaptureDevice *captureDevice;
+@property (strong , nonatomic) AVCaptureDeviceInput *captureDeviceInput;
+@property (strong , nonatomic) AVCaptureStillImageOutput *stillImgOutput;
 @property (nonatomic, strong) AVCaptureVideoPreviewLayer *previewlayer; //预览layer
+
+
 
 @end
 
 @implementation ViewController
 
 - (void)viewDidLoad {
-    
     [super viewDidLoad];
     
-    //设置一手分辨率
-    if ([self.session canSetSessionPreset:AVCaptureSessionPreset640x480]) {
-        self.session.sessionPreset=AVCaptureSessionPreset640x480;
-    }
+    // UI
+    [self setUpUI];
     
-    //1.设置视频输入
-    [self setUpVideo];
+    //setUp session
+    self.captureSession.sessionPreset = AVCaptureSessionPresetPhoto;
     
-    //2.设置音频输入
-    [self setUpAudio];
+    //setUpDevice
+    [self setUpDevice];
 
-    //3.文件输出
-    [self setUpFileOut];
+    //setUpLayer
+    [self setUpPreViewLayer];
     
-    //4.设置预览layer
-    [self setUpPreviewLayer];
-
+    //Run Session
+    [self startSession];
 }
 
-- (void)setUpVideo {
-    //获取设备
-    AVCaptureDevice *videoCaptureDevice=[self getCameraDeviceWithPosition:AVCaptureDevicePositionBack];//取得后置摄像头
-    
-    //创建视频输入
+- (void)viewWillLayoutSubviews {
+    self.previewlayer.frame = self.view.bounds;
+}
+
+
+//MARK: - start And stop
+
+- (void)startSession {
+    if (NO == [self.captureSession isRunning]) {
+        [self.captureSession startRunning];
+    }
+}
+
+- (void)stopSession {
+    if ([self.captureSession isRunning]) {
+        [self.captureSession stopRunning];
+    }
+}
+
+
+//MARK: - setUp
+
+- (void)setUpUI {
+    [self.view addSubview:self.captureBtn];
+}
+
+- (void)setUpDevice {
     NSError *error = nil;
-    self.videoInput = [[AVCaptureDeviceInput alloc] initWithDevice:videoCaptureDevice error:&error];
+    //创建输入
+    self.captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:self.captureDevice error:&error];
     
-    //放入session
-    if([self.session canAddInput:self.videoInput]){
-        [self.session addInput:self.videoInput];
+    //连接输出和输入
+    if ([self.captureSession canAddInput:self.captureDeviceInput]) {
+        [self.captureSession addInput:self.captureDeviceInput];
+    }
+    
+    if ([self.captureSession canAddOutput:self.stillImgOutput]) {
+        [self.captureSession addOutput:self.stillImgOutput];
     }
 }
 
-- (void)setUpAudio {
-    
-    AVCaptureDevice *audioCaptureDevice = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio] firstObject];
-    
-    NSError *error = nil;
-    self.audioInput = [[AVCaptureDeviceInput alloc] initWithDevice:audioCaptureDevice error:&error];
-    
-    //放入session
-    if ([self.session canAddInput:self.audioInput]) {
-        [self.session addInput:self.audioInput];
-    }
+- (void)setUpPreViewLayer {
+    self.previewlayer = [AVCaptureVideoPreviewLayer layerWithSession:self.captureSession];
+    self.previewlayer.frame = self.view.bounds;
+    [self.view.layer addSublayer:self.previewlayer];
 }
 
-- (void)setUpFileOut {
-    
-    //1. 初始化设备输出对象
-    self.movieFileOutPut = [[AVCaptureMovieFileOutput alloc] init];
-    
-    //2. 设置输出对象的属性
-    AVCaptureConnection *captureConnection = [self.movieFileOutPut connectionWithMediaType:AVMediaTypeVideo];
-    
-    //3. 视频防抖
-    if([captureConnection isVideoStabilizationSupported]){
-        captureConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
-    }
-    
-    //4. 预览图层和视频方向保持一致
-    captureConnection.videoOrientation = [self.previewlayer connection].videoOrientation;
-    
-    //5. 输出设备添加到会话中
-    if ([self.session canAddOutput:self.movieFileOutPut]) {
-        [self.session addOutput:self.movieFileOutPut];
-    }
-    
-}
-
-- (void)setUpPreviewLayer {
-    
-    self.previewlayer.frame = [UIScreen mainScreen].bounds;
-    [self.view.layer insertSublayer:self.previewlayer above:0];
-}
-
-
-//MARK: - 获取录像设备
-- (AVCaptureDevice *)getCameraDeviceWithPosition:(AVCaptureDevicePosition)position {
-    NSArray *cameras = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-    for (AVCaptureDevice *device in cameras) {
-        if ([device position] == position) {
-            return device;
-        }
-    }
-    return nil;
+- (void)onCaptureBtnClick {
+    NSLog(@"click btn");
+    //获取Connection
+    AVCaptureConnection *connection = [self.stillImgOutput connectionWithMediaType:AVMediaTypeVideo];
+    //拍照
+    [self.stillImgOutput captureStillImageAsynchronouslyFromConnection:connection completionHandler:^(CMSampleBufferRef  _Nullable imageDataSampleBuffer, NSError * _Nullable error) {
+        
+        NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
+        UIImage *image = [UIImage imageWithData:imageData];
+        
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
+    }];
 }
 
 //MARK: - lazy
 
-- (AVCaptureVideoPreviewLayer *)previewLayer
-{
+- (AVCaptureStillImageOutput *)stillImgOutput {
+    if (!_stillImgOutput) {
+        _stillImgOutput = [AVCaptureStillImageOutput new];
+        _stillImgOutput.outputSettings = @{AVVideoCodecKey:AVVideoCodecTypeJPEG};
+    }
+    return _stillImgOutput;
+}
+
+- (AVCaptureDevice *)captureDevice {
+    if (!_captureDevice) {
+        _captureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    }
+    return _captureDevice;
+}
+
+- (UIButton *)captureBtn {
+    if (!_captureBtn) {
+        _captureBtn = [UIButton new];
+        _captureBtn.frame = CGRectMake(100, 100, 150, 100);
+        [_captureBtn setTitle:@"_captureBtn" forState:UIControlStateNormal];
+        [_captureBtn addTarget:self action:@selector(onCaptureBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return _captureBtn;
+}
+
+- (AVCaptureVideoPreviewLayer *)previewLayer {
     if (!_previewlayer) {
-        _previewlayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.session];
+        _previewlayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:self.captureSession];
         _previewlayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
     }
     
     return _previewlayer;
 }
 
-- (AVCaptureSession *)session
-{
-    if(!_session) {
-        _session = [AVCaptureSession new];
+- (AVCaptureSession *)captureSession {
+    if(!_captureSession) {
+        _captureSession = [AVCaptureSession new];
     }
-    return _session;
+    return _captureSession;
 }
 
 @end
